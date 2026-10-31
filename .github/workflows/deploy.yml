@@ -34,10 +34,10 @@ jobs:
       - name: Pull and rebuild on the server
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SECRET_KEY }}
+          port: ${{ secrets.PORT || 22 }}
           script: |
             set -e
             cd "${{ secrets.DEPLOY_PATH }}"

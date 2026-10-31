@@ -94,10 +94,10 @@ In each repo, go to **Settings → Secrets and variables → Actions → New rep
 
 | Secret | Value |
 |---|---|
-| `SSH_HOST` | Server IP or hostname |
-| `SSH_USER` | The user from step 3 |
-| `SSH_KEY` | The full contents of `~/.ssh/truckway_deploy` (the private key, including the BEGIN/END lines) |
-| `SSH_PORT` | Optional. Leave it out to use port 22. |
+| `HOST` | Server IP or hostname |
+| `USER` | The user from step 3 |
+| `SECRET_KEY` | The full contents of `~/.ssh/truckway_deploy` (the private key, including the BEGIN/END lines) |
+| `PORT` | Optional. Leave it out to use port 22. |
 | `DEPLOY_PATH` | `/home/<user>/apps/truckway-backend` in the backend repo, `/home/<user>/apps/truckway-frontend` in the frontend repo |
 
 Then open **Actions → CI / Deploy → Run workflow** in each repo, or push a commit. A green run means the server is updated.
@@ -138,7 +138,7 @@ git push        # tests run, then the server updates itself in about 1–3 minut
 
 | Symptom | Fix |
 |---|---|
-| Deploy fails with `Permission denied (publickey)` | `SSH_KEY` must be the private key, and its `.pub` must be in the server's `~/.ssh/authorized_keys`. |
+| Deploy fails with `Permission denied (publickey)` | `SECRET_KEY` must be the private key, and its `.pub` must be in the server's `~/.ssh/authorized_keys`. |
 | `permission denied ... docker.sock` | `sudo usermod -aG docker <user>`, then log in again. |
 | `git pull --ff-only` fails | Someone edited tracked files on the server. Run `git status` there and discard or commit those changes. Never edit code on the server. |
 | API health check fails | `docker compose --profile prod logs prod` in the backend folder. Usually a missing `TOMTOM_API_KEY`, or the domain is missing from `DJANGO_ALLOWED_HOSTS`. |
