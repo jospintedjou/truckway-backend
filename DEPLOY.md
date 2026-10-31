@@ -3,7 +3,7 @@
 Truckway lives in two repos, `truckway-backend` and `truckway-frontend`. Each has the same small pipeline in `.github/workflows/deploy.yml`:
 
 ```
-git push ──► GitHub Actions ──► tests ──► SSH to server ──► git pull ──► docker compose up -d --build ──► health check
+git push ──► GitHub Actions ──► tests ──► SSH to server ──► git fetch + reset ──► docker compose up -d --build ──► health check
 ```
 
 - **Pull requests and other branches:** tests only.
@@ -140,7 +140,7 @@ git push        # tests run, then the server updates itself in about 1–3 minut
 |---|---|
 | Deploy fails with `Permission denied (publickey)` | `SECRET_KEY` must be the private key, and its `.pub` must be in the server's `~/.ssh/authorized_keys`. |
 | `permission denied ... docker.sock` | `sudo usermod -aG docker <user>`, then log in again. |
-| `git pull --ff-only` fails | Someone edited tracked files on the server. Run `git status` there and discard or commit those changes. Never edit code on the server. |
+| `fatal: not a git repository` | `DEPLOY_PATH` is empty or points to a folder that is not the clone. Use the absolute path printed by `pwd` inside the clone on the server. |
 | API health check fails | `docker compose --profile prod logs prod` in the backend folder. Usually a missing `TOMTOM_API_KEY`, or the domain is missing from `DJANGO_ALLOWED_HOSTS`. |
 | Site loads but `/api` returns 502 | Check that the backend is up on port 8021 and that `API_UPSTREAM` in the frontend `.env` points to it. |
 
