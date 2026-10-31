@@ -1,0 +1,52 @@
+# Test on every push and pull request; deploy to the server on pushes to main/master.
+# Deploy = SSH to the server, pull the code, rebuild the containers. Secrets stay in the server's .env.
+name: CI / Deploy
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+      - run: pytest
+
+  deploy:
+    needs: test
+    if: github.event_name != 'pull_request' && (github.ref_name == 'main' || github.ref_name == 'master')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull and rebuild on the server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+            cd "${{ secrets.DEPLOY_PATH }}"
+            git pull --ff-only origin ${{ github.ref_name }}
+            docker compose --profile prod up -d --build
+            docker image prune -f
+            # wait for the API to answer before calling the deploy a success
+            for i in $(seq 1 20); do
+              curl -fsS http://localhost:${API_PORT:-8021}/api/health && exit 0
+              sleep 3
+            done
+            echo "API did not become healthy" && docker compose --profile prod logs --tail 50 prod && exit 1
